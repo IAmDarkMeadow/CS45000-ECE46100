@@ -95,20 +95,24 @@ function ProcessURL(url) {
         License: ranker.GetLicense, Liscense_Latency: ranker.GetLicenseLatency });
     ranker.Clear();
 }
+
 //Read Input
-const fileLocation = process.argv[2]; //Gives argument three, which *should* be the file location
+//const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
+//console.log('File Path:',fileLocation);   
 //Outputs file
-fs.stat(fileLocation, (err, stats) => {
-    if (err == null) {
-        if (stats.isFile()) {
-            const parser = new TestParser_1.UrlProcessor();
-            parser.processUrlsFromFile(fileLocation, ProcessURL);
+function Main(fileLocation) {
+    fs.stat(fileLocation, (err, stats) => {
+        if (err == null) {
+            if (stats.isFile()) {
+                const parser = new TestParser_1.UrlProcessor();
+                parser.processUrlsFromFile(fileLocation, ProcessURL);
+            }
         }
-    }
-    else {
-        console.log('\nNot a File');
-        process.exit(1);
-    }
-    //close error things etc etc    
-});
+        else {
+            console.log('\nNot a File');
+            process.exit(1);
+        }
+        //close error things etc etc    
+    });
+}
 //# sourceMappingURL=Master.js.map
