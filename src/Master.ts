@@ -91,8 +91,7 @@ function ProcessURL(url: string): void {
 
 
 //Read Input
-const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
-//Outputs file
+export function Main(fileLocation : string){
 fs.stat(fileLocation, (err, stats) => {
     if (err==null){
         if(stats.isFile()){
@@ -105,4 +104,6 @@ fs.stat(fileLocation, (err, stats) => {
         process.exit(1);
     }
     //close error things etc etc    
+});
+}
 });
