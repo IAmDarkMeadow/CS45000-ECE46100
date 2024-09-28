@@ -20,9 +20,9 @@ function runCommand(fname:string){
         try{
         //execSync(command, { stdio: 'inherit' });
         Main(urlFile);
-        console.log(`Successfully ran ${urlFile}`);
+        //console.log(`Successfully ran ${urlFile}`);
         }catch (error) {
-          console.error(`Failed to run ${urlFile}`) ; 
+          //console.error(`Failed to run ${urlFile}`) ; 
         }
     
  }
