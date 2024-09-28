@@ -106,4 +106,13 @@ fs.stat(fileLocation, (err, stats) => {
     //close error things etc etc    
 });
 }
+//output is pure string
+//Get URLs
+//FORMAT OF CONSOLE: node Master.js (file string) 
+//batch checks for install/test and if not either, runs above command (running this file)
+
+/*
+const filePath = path.join(__dirname, 'TestURLs.txt');
+
+*/
 });
