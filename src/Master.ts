@@ -21,7 +21,7 @@ function GetRepoInfo(url: string): {owner: string; repo: string} | null{
     return null; // Return null if the URL doesn't match
 }
 
-function ProcessURL(url: string): void {
+async function ProcessURL(url: string){
     const ranker = new Calculate();
     const totalTime = new Timer();
     const factorTime = new Timer();
@@ -37,19 +37,19 @@ function ProcessURL(url: string): void {
 
             factorTime.StartTime();
             //Check Bus Factor
-            ranker.SetBusFactor = Number(getBusFactor(owner, repo));
+            ranker.SetBusFactor = Number(await getBusFactor(owner, repo));
             ranker.SetBusFactorLatency = factorTime.GetTime();
             factorTime.Reset();
 
             factorTime.StartTime();
             //Check Correctness
-            ranker.SetCorrectness = Number(evaluateCorrectness(owner, repo));
+            ranker.SetCorrectness = Number(await evaluateCorrectness(owner, repo));
             ranker.SetCorrectnessLatency = factorTime.GetTime();
             factorTime.Reset();
             
             factorTime.StartTime();
             //Check License
-            ranker.SetLicense = Number(checkLicenseCompatibility(owner, repo));
+            ranker.SetLicense = Number(await checkLicenseCompatibility(owner, repo));
             ranker.SetLicenseLatency = factorTime.GetTime();
             factorTime.Reset();
 
@@ -63,7 +63,7 @@ function ProcessURL(url: string): void {
 
             factorTime.StartTime();
             //Check ResponsiveMaintainer
-            ranker.SetResponsiveMaintainer = Number(calculateResponsiveMaintainer(owner, repo));
+            ranker.SetResponsiveMaintainer = Number(await calculateResponsiveMaintainer(owner, repo));
             ranker.SetResponsiveMaintainerLatency = factorTime.GetTime();
             factorTime.Reset();
 
@@ -82,7 +82,7 @@ function ProcessURL(url: string): void {
     SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
         RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency, 
         BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency, 
-        License: ranker.GetLicense, Liscense_Latency: ranker.GetLicenseLatency});
+        License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency});
 
 
     ranker.Clear();
@@ -115,4 +115,4 @@ fs.stat(fileLocation, (err, stats) => {
 const filePath = path.join(__dirname, 'TestURLs.txt');
 
 */
-});
+
