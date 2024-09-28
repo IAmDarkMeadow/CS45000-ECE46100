@@ -1,10 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-//const { execSync } = require('child_process');
+//const { execSync } = require('node:child_process');
 const node_child_process_1 = require("node:child_process");
+require("./Install");
+require("./Master");
 //execSync(Command, { stdio: 'inherit' });
 function runCommand(fname) {
-    let file = __dirname + '//' + fname;
+    let file = __dirname + '/' + fname;
     const command = `node ${file}`;
     try {
         (0, node_child_process_1.execSync)(command, { stdio: 'inherit' });
@@ -17,7 +19,7 @@ function runCommand(fname) {
 function runMaster(fname, urlFile) {
     let file = __dirname + `//` + fname;
     const command = `node ${file} ${urlFile}`;
-    console.log(`running subprogram ${file}`);
+    console.log(`running subprogram ${file} to test ${urlFile}`);
     try {
         (0, node_child_process_1.execSync)(command, { stdio: 'inherit' });
         console.log(`Successfully ran ${urlFile}`);
@@ -34,23 +36,32 @@ var n = 0; //root command loc
 //process.exit(1);
 //}
 //}
-console.log(`${process.argv[n]}`);
-try{
-while (process.argv[n] != __filename) {
-    n++;
-    console.log(`${process.argv[n]}`);
+try {
+    while (process.argv[n] != __filename) {
+        console.log(`${process.argv[n]}`);
+        n++;
+    }
+    console.log(`file is ${process.argv[n]}`);
+    n = n + 1;
+    console.log(`dir is ${__dirname} ${n}`);
 }
-n = n + 1;
-} catch(error){
-    console.error(`Failed to run, invalid location or command parsing error`);
+catch (error) {
+    console.error(`Failed to run program`);
 }
 const commandString = process.argv[n];
 if (commandString == null) {
-    console.error(`Failed to run`);
-    process.exit(1);
+    console.error(`Failed to run, invalid arguments`);
+    process.exit(0);
 }
 if (commandString == 'install') {
-    runCommand('Install.js');
+    try {
+        //execSync(`git clone https://github.com/IAmDarkMeadow/CS45000-ECE46100 `, { stdio: 'inherit' });
+        //  console.log(`install to ${__dirname}`);
+        runCommand('Install.js');
+    }
+    catch (error) {
+        console.error(`Error`);
+    }
 }
 else if (commandString == 'test') {
     runCommand('TestRun.js');
