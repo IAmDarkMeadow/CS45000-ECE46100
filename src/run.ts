@@ -1,8 +1,10 @@
-//const { execSync } = require('child_process');
+//const { execSync } = require('node:child_process');
 import { execSync } from "node:child_process";
+import {Main} from "./Master"
+
 //execSync(Command, { stdio: 'inherit' });
 function runCommand(fname:string){
-    let file:string = __dirname+'//'+fname;
+    let file:string = __dirname+'/'+fname;
     const command = `node ${file}`
     try{
     execSync(command, { stdio: 'inherit' });
@@ -11,12 +13,13 @@ function runCommand(fname:string){
       console.error(`Failed to run ${file}`)  ;
     }
 }
-    function runMaster(fname:string, urlFile:string){
-        let file:string = __dirname+`//`+fname;
-        const command = `node ${file} ${urlFile}`
-        console.log(`running subprogram ${file} to test ${urlFile}`);
+    function runMaster(urlFile:string){
+       // let file:string = __dirname+`//`+fname;
+        //const command = `node ${file} ${urlFile}`
+       // console.log(`running to test ${urlFile}`);
         try{
-        execSync(command, { stdio: 'inherit' });
+        //execSync(command, { stdio: 'inherit' });
+        Main(urlFile);
         console.log(`Successfully ran ${urlFile}`);
         }catch (error) {
           console.error(`Failed to run ${urlFile}`) ; 
@@ -33,11 +36,15 @@ var n = 0; //root command loc
 //}
 try{
 while (process.argv[n] != __filename){
+    //console.log(`${process.argv[n]}`);
     n++;
 }
+//console.log(`file is ${process.argv[n]}`);
  n=n+1
+ //console.log(`dir is ${__dirname} ${n}`);
 } catch(error){
     console.error(`Failed to run program`);
+    process.exit(1) ;
 }
 const commandString:string = process.argv[n];
 if (commandString == null){
@@ -45,7 +52,14 @@ if (commandString == null){
     process.exit(0) ;
 }
 if (commandString == 'install'){
+    try{
+//execSync(`git clone https://github.com/IAmDarkMeadow/CS45000-ECE46100 `, { stdio: 'inherit' });
+  //  console.log(`install to ${__dirname}`);
+  require("./Install");
     runCommand('Install.js');
+    }catch(error){
+        console.error(`Error`);
+    }
 }
 else
 if (commandString == 'test'){
@@ -54,5 +68,6 @@ if (commandString == 'test'){
 else {
     
     const url:string = process.argv[n];
-    runMaster('Master.js',url);
+    //require("./Master");
+    runMaster(url);
 }
