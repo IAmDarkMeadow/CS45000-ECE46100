@@ -1,4 +1,20 @@
 "use strict";
+/*
+ * VerifyURL.ts
+ *
+ * Description:
+ * This file will take a NPMJS link, and find a github repo link to return. If it does not find one, then it returns null
+ * It does this by first taking in an entire npm URL. It will extract the package name from said URL, and concatenate it to the npm registry URL.
+ * Once this has been done, the file will fetch the package data from the npm registry.
+ *  It will then check if the repository field exists and points to GitHub.
+ * If it exists, it will get the repository URL and convert it to HTTPS format.
+ * Finally, the system will return the formatted URL for use in the rest of the program.
+ *
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14,6 +30,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isPackageOnGitHub = isPackageOnGitHub;
 const axios_1 = __importDefault(require("axios"));
+const Logger_1 = __importDefault(require("./Logger"));
 function isPackageOnGitHub(packageName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -62,13 +79,13 @@ function isPackageOnGitHub(packageName) {
                     return repoUrl; // Return the formatted URL
                 }
             }
-            console.log("No GitHub repository found for package.");
             return null; // Return null if no repository URL is found
         }
         catch (error) {
-            console.log(`Failed to fetch package information for ${packageName}`);
+            Logger_1.default.info("Something went wrong connecting to the npmjs link " + packageName + " from VerifyURL");
+            Logger_1.default.info(error);
             return null; // Return null in case of error
         }
     });
 }
-//# sourceMappingURL=verifyURL.js.map
+//# sourceMappingURL=VerifyURL.js.map

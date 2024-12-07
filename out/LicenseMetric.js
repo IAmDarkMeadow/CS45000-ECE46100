@@ -1,4 +1,18 @@
 "use strict";
+/*
+ * Correctness.ts
+ *
+ * Description:
+ * This file uses the GitHubAPI to find the license compatibility based on the requirements document.
+ * We look to see if the repository contains a LICENSE file and if so we look to see if contains the compatible licenses list.
+ * We look README files to see if the license is there if so then we compare it to compatiblelicenses list.
+ * If Compatible we output a 1 and if not then output a 0.
+ *
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -38,6 +52,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkLicenseCompatibility = checkLicenseCompatibility;
 const axios_1 = __importDefault(require("axios"));
 const dotenv = __importStar(require("dotenv"));
+const Logger_1 = __importDefault(require("./Logger"));
 // Load environment variables from .env
 dotenv.config();
 // Base URL for GitHub API
@@ -62,7 +77,6 @@ function getRepoLicense(owner, repo) {
                     },
                 });
                 const licenseContent = Buffer.from(licenseFileResponse.data.content, 'base64').toString('utf-8');
-                console.log("License File Content:", licenseContent);
                 // Check if the license file contains 'GPL-2.0' or other relevant license information
                 if (licenseContent.includes('GNU GENERAL PUBLIC LICENSE') && licenseContent.includes('Version 2')) {
                     return 'gpl-2.0'; // Return the GPL-2.0 identifier manually
@@ -71,7 +85,8 @@ function getRepoLicense(owner, repo) {
             return response.data.license.spdx_id;
         }
         catch (error) {
-            console.error(`Error fetching license: ${error}`);
+            Logger_1.default.info('Failed to access GitHub API from License');
+            Logger_1.default.info(error);
             return 0;
         }
     });
@@ -81,7 +96,6 @@ function checkLicenseCompatibility(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
         const licenseKey = yield getRepoLicense(owner, repo);
         if (!licenseKey) {
-            console.log('License information could not be retrieved.');
             return 0;
         }
         if (compatibleLicenses.includes(licenseKey.toLowerCase())) {

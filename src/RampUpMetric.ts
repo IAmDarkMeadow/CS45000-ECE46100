@@ -1,8 +1,21 @@
-﻿//Calculations of the Rampup metric will be done here by utilising the Github API
+﻿/*
+ * Correctness.ts
+ * 
+ * Description:
+ * Calculations of the Rampup metric will be done here by utilising the Github API. This file will first access the README file
+ * from the repository and then check for the presence of certain sections. If the sections are present, the rampup score will increase.
+ * Unlike the cloning 
+ * 
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
 
 //Ensure that we have the required libraries
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import logger from './Logger';
 
 
 //Variable that will keep track of how good the ramp-up score is
@@ -19,7 +32,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 //Throw an error if the token is not found
 if (!GITHUB_TOKEN) {
-    throw new Error("Github Token not found in environment variables.");
+    process.exit(1);
 }//end if statement
 
 //Function that will get the README file from the repository
@@ -44,7 +57,8 @@ async function getReadme(owner: string, repo: string) {
 
     catch (error) {
 
-        console.error('Failed to get README file :(');
+        logger.info('Failed to access GitHub API from RampUp');
+        logger.info(error);
 
     }//end catch statement
 
@@ -59,7 +73,7 @@ async function analyzeReadme(readmeContent: string) {
 
     }//end if statement
 
-    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation")) {
+    if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
 
         rampScore += 10;
 
@@ -96,7 +110,6 @@ async function analyzeReadmeContent(owner:string, repo:string) {
 
      // Check if the readmeContent is null before decoding
      if (!readmeContent) {
-        console.error('No README content found to analyze.');
         return; // Exit if there's no content
     }
 

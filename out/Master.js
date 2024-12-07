@@ -31,18 +31,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const TestParser_1 = require("./TestParser");
-const TestOutput_1 = require("./TestOutput");
-const TestRanker_1 = require("./TestRanker");
+/*
+ * Master.ts
+ *
+ * Description:
+ * This file compiles all the necessary files for scoring the URLs
+ * It will time each metric collected and collect the metric information.
+ * It will then send it to the output method using JSON
+ * It also does extra things to accomplish this, such as getting repo/owner names or testing if a link is from npmjs
+ *
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
+const URLParser_1 = require("./URLParser");
+const Output_1 = require("./Output");
+const Ranker_1 = require("./Ranker");
 const Timer_1 = require("./Timer");
 const BusFactor_1 = require("./BusFactor");
 const ResponsiveMaintainer_1 = require("./ResponsiveMaintainer");
 const CorrectnessMetric_1 = require("./CorrectnessMetric");
 const LicenseMetric_1 = require("./LicenseMetric");
 const RampUpMetric_1 = require("./RampUpMetric");
-const verifyURL_1 = require("./verifyURL");
-const repoClone_1 = require("./repoClone");
+const VerifyURL_1 = require("./VerifyURL");
+const RepoClone_1 = require("./RepoClone");
+const Logger_1 = __importDefault(require("./Logger"));
 const fs = __importStar(require("fs"));
 function GetRepoInfo(url) {
     const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
@@ -60,19 +78,18 @@ function isNpmLink(url) {
 }
 function ProcessURL(url, urlNum) {
     return __awaiter(this, void 0, void 0, function* () {
-        const ranker = new TestRanker_1.Calculate();
+        const ranker = new Ranker_1.Calculate();
         const totalTime = new Timer_1.Timer();
         const factorTime = new Timer_1.Timer();
         let repoInfo;
-        console.log(urlNum);
         if (isNpmLink(url)) {
-            console.log("Checking for NPM link");
-            let newURL = yield (0, verifyURL_1.isPackageOnGitHub)(url);
+            let newURL = yield (0, VerifyURL_1.isPackageOnGitHub)(url);
             if (newURL) {
                 url = newURL;
                 repoInfo = GetRepoInfo(url);
             }
             else {
+                Logger_1.default.info('No github repo for URL ' + url);
                 repoInfo = null;
             }
         }
@@ -81,7 +98,6 @@ function ProcessURL(url, urlNum) {
         }
         if (repoInfo) {
             const { owner, repo } = repoInfo;
-            console.log("Git Repo Grabbed : " + owner + " " + repo + " " + urlNum);
             if (owner && repo) {
                 totalTime.StartTime();
                 ranker.SetURL = url;
@@ -92,7 +108,7 @@ function ProcessURL(url, urlNum) {
                 factorTime.Reset();
                 factorTime.StartTime();
                 //Check Correctness
-                ranker.SetCorrectness = Number(yield (0, CorrectnessMetric_1.evaluateCorrectness)(owner, repo));
+                ranker.SetCorrectness = Number(yield (0, CorrectnessMetric_1.calculateCorrectnessScore)(owner, repo));
                 ranker.SetCorrectnessLatency = factorTime.GetTime();
                 factorTime.Reset();
                 factorTime.StartTime();
@@ -101,14 +117,12 @@ function ProcessURL(url, urlNum) {
                 ranker.SetLicenseLatency = factorTime.GetTime();
                 factorTime.Reset();
                 factorTime.StartTime();
-                if (urlNum > 0) {
-                    console.log("Checking RampUp for URL: " + url);
+                if (urlNum > 1) {
                     //Check Rampup
                     ranker.SetRampUp = yield (0, RampUpMetric_1.displayRampupScore)(owner, repo);
                 }
                 else {
-                    console.log("Cloning Repo from Master");
-                    ranker.SetRampUp = yield (0, repoClone_1.cloneRepository)(url);
+                    ranker.SetRampUp = yield (0, RepoClone_1.cloneRepository)(url);
                 }
                 ranker.SetRampUpLatency = factorTime.GetTime();
                 factorTime.Reset();
@@ -122,33 +136,34 @@ function ProcessURL(url, urlNum) {
                 totalTime.Reset();
             }
             else {
+                Logger_1.default.info("Could not get repo owner or name from URL" + url);
                 ranker.SetURL = url;
-                console.log("Unable to connecto to repo, could not find the owner name and the repo name");
             }
         }
         else {
+            Logger_1.default.info("Could not get repo owner or name from URL" + url);
             ranker.SetURL = url;
-            console.log("Unable to connecto to repo");
         }
-        TestOutput_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
+        Output_1.SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency,
             RampUp: ranker.GetRampUp, RampUp_Latency: ranker.GetRampUpLatency, Correctness: ranker.GetCorrectness, Correctness_Latency: ranker.GetCorrectnessLatency,
             BusFactor: ranker.GetBusFactor, BusFactor_Latency: ranker.GetBusFactorLatency, ResponsiveMaintainer: ranker.GetResponsiveMaintainer, ResponsiveMaintainer_Latency: ranker.GetResponsiveMaintainerLatency,
             License: ranker.GetLicense, License_Latency: ranker.GetLicenseLatency });
         ranker.Clear();
     });
 }
+Logger_1.default.info('Program Started');
 //Read Input
 const fileLocation = process.argv[2]; //Gives argument three, which *should* be the file location
 //Outputs file
 fs.stat(fileLocation, (err, stats) => {
     if (err == null) {
         if (stats.isFile()) {
-            const parser = new TestParser_1.UrlProcessor();
+            const parser = new URLParser_1.UrlProcessor();
             parser.processUrlsFromFile(fileLocation, ProcessURL);
         }
     }
     else {
-        console.log('\nNot a File');
+        Logger_1.default.info("File does not exist");
         process.exit(1);
     }
     //close error things etc etc    

@@ -1,15 +1,29 @@
-import { UrlProcessor } from "./TestParser";
-import { SendToOutput } from "./TestOutput";
-import { Calculate } from "./TestRanker";
+/*
+ * Master.ts
+ * 
+ * Description:
+ * This file compiles all the necessary files for scoring the URLs
+ * It will time each metric collected and collect the metric information.
+ * It will then send it to the output method using JSON
+ * It also does extra things to accomplish this, such as getting repo/owner names or testing if a link is from npmjs
+ * 
+ * Author: Jacob Esparza
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+import { UrlProcessor } from "./URLParser";
+import { SendToOutput } from "./Output";
+import { Calculate } from "./Ranker";
 import { Timer } from "./Timer";
 import {getBusFactor} from './BusFactor';
 import {calculateResponsiveMaintainer} from './ResponsiveMaintainer'
-import {evaluateCorrectness} from './CorrectnessMetric'
+import {calculateCorrectnessScore} from './CorrectnessMetric'
 import {checkLicenseCompatibility} from './LicenseMetric'
 import {displayRampupScore} from './RampUpMetric'
-import {isPackageOnGitHub} from './verifyURL'
-import {cloneRepository} from './repoClone'
-import * as path from 'path';
+import {isPackageOnGitHub} from './VerifyURL'
+import {cloneRepository} from './RepoClone'
+import logger from './Logger';
 import * as fs from 'fs';
 
 function GetRepoInfo(url: string): {owner: string; repo: string} | null{
@@ -35,10 +49,8 @@ async function ProcessURL(url: string, urlNum: number){
     const totalTime = new Timer();
     const factorTime = new Timer();
     let repoInfo;
-    console.log(urlNum);
     
     if(isNpmLink(url)){
-        console.log("Checking for NPM link");
         let newURL = await isPackageOnGitHub(url);
         if(newURL){
             url = newURL;
@@ -46,6 +58,7 @@ async function ProcessURL(url: string, urlNum: number){
             
         }
         else{
+            logger.info('No github repo for URL ' + url);
             repoInfo = null;
         }
     }
@@ -57,7 +70,6 @@ async function ProcessURL(url: string, urlNum: number){
     if(repoInfo){
 
         const { owner, repo } = repoInfo;
-        console.log("Git Repo Grabbed : " + owner + " " + repo + " " + urlNum);
 
         if(owner && repo){
             totalTime.StartTime();
@@ -71,7 +83,7 @@ async function ProcessURL(url: string, urlNum: number){
 
             factorTime.StartTime();
             //Check Correctness
-            ranker.SetCorrectness = Number(await evaluateCorrectness(owner, repo));
+            ranker.SetCorrectness = Number(await calculateCorrectnessScore(owner, repo));
             ranker.SetCorrectnessLatency = factorTime.GetTime();
             factorTime.Reset();
             
@@ -82,13 +94,11 @@ async function ProcessURL(url: string, urlNum: number){
             factorTime.Reset();
 
             factorTime.StartTime();
-            if(urlNum > 0){
-                console.log("Checking RampUp for URL: " + url);
+            if(urlNum > 1){
                 //Check Rampup
                 ranker.SetRampUp = await displayRampupScore(owner, repo);
             }
             else{
-                console.log("Cloning Repo from Master");
                 ranker.SetRampUp = await cloneRepository(url);
             }
             ranker.SetRampUpLatency = factorTime.GetTime();
@@ -105,13 +115,13 @@ async function ProcessURL(url: string, urlNum: number){
             totalTime.Reset();
         }
         else{
+            logger.info("Could not get repo owner or name from URL" + url);
             ranker.SetURL = url;
-            console.log("Unable to connecto to repo, could not find the owner name and the repo name");
         }
     }
     else{
+        logger.info("Could not get repo owner or name from URL" + url);
         ranker.SetURL = url;
-        console.log("Unable to connecto to repo");
     }
 
     SendToOutput.writeToStdout({ URL: ranker.GetURL, NetScore: ranker.GetNetScore, NetScore_Latency: ranker.GetNetScoreLatency, 
@@ -124,7 +134,7 @@ async function ProcessURL(url: string, urlNum: number){
     
 }
 
-
+logger.info('Program Started');
 //Read Input
 const fileLocation : string = process.argv[2];     //Gives argument three, which *should* be the file location
 //Outputs file
@@ -136,7 +146,7 @@ fs.stat(fileLocation, (err, stats) => {
         }
     }
     else{
-        console.log('\nNot a File');
+        logger.info("File does not exist");
         process.exit(1);
     }
     //close error things etc etc    

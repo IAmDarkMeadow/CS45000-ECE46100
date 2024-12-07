@@ -1,3 +1,15 @@
+/*
+ * Timer.ts
+ * 
+ * Description:
+ * This file will start a timer and return the time elapsed. 
+ * 
+ * Author: Kameran Parker
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
 export class Timer {
 
   private elapsedTime;
@@ -23,13 +35,3 @@ export class Timer {
   }
 
 } //End class Timer
-
-/*
-//place this line right before a function to start the timer
-var startTime = Date.now();
-
-//place these 3 lines of code after a function call or body of code to stop the timer and to display the time
-var elapsedTime = Date.now() - startTime;
-var time = (elapsedTime / 1000).toFixed(3);
-console.log("function took " + time + " seconds");
-*/

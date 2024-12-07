@@ -1,6 +1,22 @@
+/*
+ * Correctness.ts
+ * 
+ * Description:
+ * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues.
+ * We calculate this by adding up how long some of the issues took to be fixed and storing the total. 
+ * Then we divide it by how many issues there were. 
+ * 
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ * 
+ */
+
+
 //Promised-based HTTP client to make requests to the GitHub API
 import axios from 'axios';
 import dotenv from 'dotenv';
+import logger from './Logger';
 
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv.config();
@@ -40,7 +56,8 @@ async function fetchPaginatedData(url: string): Promise<any[]> {
         // Check for the "Link" header to see if there's a next page
         nextPageUrl = getNextPage(response.headers.link || null);
       } catch (error) {
-        console.error(`Error fetching data from ${nextPageUrl}:`, error);
+          logger.info('Unable to fetch data from ResponsiveMaintainer');
+          logger.info(error);
         return results; // Return what we have in case of failure
       }
     }
@@ -71,14 +88,12 @@ async function getPullRequests(owner: string, repo: string) {
   
   // Main function to calculate the "Responsive Maintainer" metric
   export async function calculateResponsiveMaintainer(owner: string, repo: string) {
-    console.log(`Fetching data for ${owner}/${repo}...`);
   
     // Fetch pull requests and issues
     const pullRequests = await getPullRequests(owner, repo);
     const issues = await getIssues(owner, repo);
   
     if (!pullRequests || !issues) {
-      console.error('Failed to fetch data from GitHub.');
       return;
     }
   

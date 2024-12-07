@@ -1,4 +1,17 @@
 "use strict";
+/*
+ * Correctness.ts
+ *
+ * Description:
+ * This file uses the GitHubAPI to find the maintainers and how quickly they respond to issues.
+ * We calculate this by adding up how long some of the issues took to be fixed and storing the total.
+ * Then we divide it by how many issues there were.
+ *
+ * Author: Brayden Devenport
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,6 +29,7 @@ exports.calculateResponsiveMaintainer = calculateResponsiveMaintainer;
 //Promised-based HTTP client to make requests to the GitHub API
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const Logger_1 = __importDefault(require("./Logger"));
 //loads environment variables GITHUB_TOKEN from .env file
 dotenv_1.default.config();
 //Retrieves Github Token form .env (environment variable file)
@@ -49,7 +63,8 @@ function fetchPaginatedData(url) {
                 nextPageUrl = getNextPage(response.headers.link || null);
             }
             catch (error) {
-                console.error(`Error fetching data from ${nextPageUrl}:`, error);
+                Logger_1.default.info('Unable to fetch data from ResponsiveMaintainer');
+                Logger_1.default.info(error);
                 return results; // Return what we have in case of failure
             }
         }
@@ -80,12 +95,10 @@ function calculateDaysDifference(date1, date2) {
 // Main function to calculate the "Responsive Maintainer" metric
 function calculateResponsiveMaintainer(owner, repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(`Fetching data for ${owner}/${repo}...`);
         // Fetch pull requests and issues
         const pullRequests = yield getPullRequests(owner, repo);
         const issues = yield getIssues(owner, repo);
         if (!pullRequests || !issues) {
-            console.error('Failed to fetch data from GitHub.');
             return;
         }
         // 1. Check when the last update was made (Pull Requests)

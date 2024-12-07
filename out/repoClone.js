@@ -1,4 +1,18 @@
 "use strict";
+/*
+ * Correctness.ts
+ *
+ * Description:
+ * Clones the repo provided and then calculates the RampUp based on that repo.
+ * It will first check to see if the directory exists, and if it does, it will delete the contents and then clone the repo again.
+ * This is to ensure that the correct repository is cloned and that the ramp-up score is accurate.
+ * To calculate the ramp-up score, the program will check the README file for certain sections. If the sections are present, the score will increase.
+ *
+ * Author: Logan Kurker
+ * Date: 9-29-2024
+ * Version: 1.0
+ *
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,6 +53,7 @@ exports.cloneRepository = cloneRepository;
 const simple_git_1 = __importDefault(require("simple-git"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const Logger_1 = __importDefault(require("./Logger"));
 // Initialize simple-git
 const git = (0, simple_git_1.default)();
 //We will now clone the repository to the directory of wherever the user is currently located
@@ -53,7 +68,6 @@ var readmeContent = "";
 function cloneRepository(repoUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log("Attempting to clone repository...");
             //Only clone if the directory does not exist
             if (!fs.existsSync(newDirectory)) {
                 yield git.clone(repoUrl, newDirectory);
@@ -75,8 +89,8 @@ function cloneRepository(repoUrl) {
         } //end try statement
         catch (error) {
             //In case the repository fails to clone
-            console.error('Failed to clone repository :(');
-            return -1;
+            Logger_1.default.info('Failed to clone repository from RepoClone');
+            return 0;
         } //end catch statement
     });
 } //end cloneRepository function
@@ -85,9 +99,6 @@ function checkFiles(directory) {
     return __awaiter(this, void 0, void 0, function* () {
         //Get all the files in the directory
         const dirFiles = fs.readdirSync(directory);
-        //List all of the files that are in the directory
-        console.log("Files in the directory: ", dirFiles);
-        console.log(dirFiles.length);
         //Check if the files in the directory match the files that we want to check
         for (let i = 0; i < dirFiles.length; i++) {
             if (dirFiles[i] == "README.md") {
@@ -96,27 +107,26 @@ function checkFiles(directory) {
                 break;
             } //end if statement
         } //end for loop
-        console.log("testing");
     });
 } //end checkFiles function
 function analyzeReadme(readmeContent) {
     return __awaiter(this, void 0, void 0, function* () {
         //Checking to see which sections are contained in the README file
-        if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started")) {
+        if (readmeContent.includes("## Introduction") || readmeContent.includes("## Getting Started") || readmeContent.includes("## introduction")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions")) {
+        if (readmeContent.includes("## Installation") || readmeContent.includes("## Installation Instructions") || readmeContent.includes("## installation") || readmeContent.includes("## install") || readmeContent.includes("## Install")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Usage")) {
+        if (readmeContent.includes("## Usage") || readmeContent.includes("## usage")) {
             rampScore += 10;
         } //end if statement
         if (readmeContent.includes("## Contact Information")) {
             rampScore += 10;
         } //end if statement
-        if (readmeContent.includes("## Configuration")) {
+        if (readmeContent.includes("## Configuration") || readmeContent.includes("## configuration")) {
             rampScore += 10;
         } //end if statement"
     });
 } //end analyzeReadme function
-//# sourceMappingURL=repoClone.js.map
+//# sourceMappingURL=RepoClone.js.map
