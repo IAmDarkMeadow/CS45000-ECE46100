@@ -26,6 +26,8 @@ installPak('path');
 installPak('simple-git');
 installPak('axios');
 installPak('dotenv');
+installPak('--save-dev jest');
+installPak('dayjs');
 installPak('winston');
 
 process.exit(0);
